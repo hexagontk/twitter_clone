@@ -1,0 +1,53 @@
+{% extends "templates/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+<div class="col">
+    <div>
+        <h1>
+            {% if isPublic %}
+            Public Timeline
+            {% else %}
+            <img src="{{image}}" />
+            {{user}}'s Timeline
+            {% endif %}
+        </h1>
+    </div>
+    <br>
+    <div>
+        {% if isOtherProfile %}
+        {% if isFollowing %}
+        <a href="/user/unfollow/{{user}}" class="btn btn-primary">Unfollow</a>
+        {% else %}
+        <a href="/user/follow/{{user}}" class="btn btn-primary">Follow</a>
+        {% endif %}
+        {% endif %}
+    </div>
+    <div>
+        {% if isLoggedIn and not isOtherProfile %}
+        <form class="form-horizontal" method="post" action="/message">
+            <div class="form-group">
+                <label for="message">What's on your mind?</label><br>
+                <input class="form-control" type="text" id="message" name="message" required>
+            </div>
+            <input class="btn btn-primary" type="submit" value="Post">
+        </form>
+        {% endif %}
+    </div>
+    <br>
+    <div>
+        <ul class="list-group">
+            {% for message in messages %}
+            <li class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1"><a href="/user/{{message.userId}}">{{message.userId}}</a></h5>
+                    <small>{{message.dateString}}</small>
+                </div>
+                <p class="mb-1">{{message.text}}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
