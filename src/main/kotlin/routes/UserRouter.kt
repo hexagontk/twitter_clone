@@ -2,10 +2,13 @@ package routes
 
 import com.hexagonkt.http.server.Router
 import com.hexagonkt.store.Store
+import com.hexagonkt.templates.pebble.PebbleAdapter
+import com.hexagonkt.web.template
 import injector
+import isLoggedIn
+import loggedInUser
 import models.Message
 import models.User
-import routes.Renderer.render
 
 val userRouter = Router {
 
@@ -51,10 +54,10 @@ val userRouter = Router {
             context["isOtherProfile"] = session.loggedInUser().username != user.username
             context["isFollowing"] = user.username in session.loggedInUser().following
         }
-        ok(
-            render(
-                "templates/timeline.html", context = context
-            )
+        template(
+            PebbleAdapter,
+            "timeline.html",
+            context = context
         )
     }
 }

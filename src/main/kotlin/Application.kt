@@ -9,6 +9,7 @@ import com.hexagonkt.store.mongodb.MongoDbStore
 import models.Message
 import models.User
 import routes.router
+import java.util.*
 
 internal val injector = InjectionManager.apply {
     bindObject<ServerPort>(JettyServletAdapter())
@@ -16,7 +17,7 @@ internal val injector = InjectionManager.apply {
     bindObject(Message::class, createMessageStore())
 }
 
-internal val server = Server(injector.inject(), router)
+internal val server = Server(router = router)
 
 internal fun createUserStore(): Store<User, String> {
     val mongodbUrl = settings.require("mongodbUrl").toString()
@@ -25,7 +26,7 @@ internal fun createUserStore(): Store<User, String> {
     return userStore
 }
 
-internal fun createMessageStore(): Store<Message, Int> {
+internal fun createMessageStore(): Store<Message, String> {
     val mongodbUrl = settings.require("mongodbUrl").toString()
     val messageStore = MongoDbStore(Message::class, Message::id, mongodbUrl)
     messageStore.createIndex(true, Message::id)

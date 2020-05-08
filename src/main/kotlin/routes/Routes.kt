@@ -1,23 +1,20 @@
 package routes
 
 import com.hexagonkt.helpers.Resource
+import com.hexagonkt.http.server.Call
 import com.hexagonkt.http.server.Router
+import com.hexagonkt.templates.pebble.PebbleAdapter
 import com.hexagonkt.http.server.Session
 import com.hexagonkt.store.Store
+import com.hexagonkt.web.template
 import injector
+import isLoggedIn
+import logUserIn
+import logUserOut
+import loggedInUser
 import models.Message
 import models.User
-import routes.Renderer.render
-
-fun Session.isLoggedIn() = get("loggedInUser") != null
-
-fun Session.loggedInUser() = get("loggedInUser") as User
-
-fun Session.logUserIn(user: User) = set("loggedInUser", user)
-
-fun Session.logUserOut() = remove("loggedInUser")
-
-fun returnWithError(resource: String, errorMessage: String) = render(resource, context = mapOf("errorMessage" to errorMessage))
+import showError
 
 val router = Router {
 
@@ -40,51 +37,52 @@ val router = Router {
             messages.findMany(filter, sort = mapOf(Message::date.name to true))
         }
 
-        ok(
-            render(
-                "templates/timeline.html", context = mapOf(
-                    "isPublic" to false,
-                    "isLoggedIn" to session.isLoggedIn(),
-                    "user" to session.loggedInUser().username,
-                    "messages" to messageFeed
-                )
+        template(
+            PebbleAdapter,
+            "timeline.html",
+            context = mapOf(
+                "isPublic" to false,
+                "isLoggedIn" to session.isLoggedIn(),
+                "user" to session.loggedInUser().username,
+                "messages" to messageFeed
             )
         )
     }
 
     get("/public") {
-        ok(
-            render(
-                "templates/timeline.html", context = mapOf(
-                    "isPublic" to true,
-                    "isLoggedIn" to session.isLoggedIn(),
-                    "messages" to messages.findAll(sort = mapOf(Message::date.name to true))
-                )
+        template(
+            PebbleAdapter,
+            "timeline.html",
+            context = mapOf(
+                "isPublic" to true,
+                "isLoggedIn" to session.isLoggedIn(),
+                "messages" to messages.findAll(sort = mapOf(Message::date.name to true))
             )
         )
+
     }
 
     get("/register") {
-        ok(
-            render(
-                "templates/register.html", context = mapOf(
-                    "isLoggedIn" to session.isLoggedIn()
-                )
+        template(
+            PebbleAdapter,
+            "register.html",
+            context = mapOf(
+                "isLoggedIn" to session.isLoggedIn()
             )
         )
     }
 
     post("/register") {
-        val email = (formParameters["email"] ?: halt(400, "Email is required"))[0]
-        val username = (formParameters["username"] ?: halt(400, "Username is required"))[0]
-        val password = (formParameters["password"] ?: halt(400, "Password is required"))[0]
+        val email = formParameters["email"] ?: halt(400, "Email is required")
+        val username = formParameters["username"] ?: halt(400, "Username is required")
+        val password = formParameters["password"] ?: halt(400, "Password is required")
 
         if (users.findMany(mapOf(User::email.name to email)).isNotEmpty()) {
-            halt(400, returnWithError("templates/register.html", "User with this email already exists"))
+            showError("register.html", "User with this email already exists")
         }
 
         if (users.findMany(mapOf(User::username.name to username)).isNotEmpty()) {
-            halt(400, returnWithError("templates/register.html", "User with this username already exists"))
+            showError("register.html", "User with this username already exists")
         }
 
         users.insertOne(
@@ -98,27 +96,29 @@ val router = Router {
     }
 
     get("/login") {
-        ok(
-            render(
-                "templates/login.html", context = mapOf(
-                    "isLoggedIn" to session.isLoggedIn()
-                )
+        template(
+            PebbleAdapter,
+            "login.html",
+            context = mapOf(
+                "isLoggedIn" to session.isLoggedIn()
             )
         )
     }
 
     post("/login") {
-        val email = (formParameters["email"] ?: halt(400, "Email is required"))[0]
-        val password = (formParameters["password"] ?: halt(400, "Password is required"))[0]
+        val email = formParameters["email"] ?: halt(400, "Email is required")
+        val password = formParameters["password"] ?: halt(400, "Password is required")
 
         val filter = mapOf(User::email.name to email)
-        val user = users.findOne(filter) ?: halt(404, returnWithError(resource = "templates/login.html", errorMessage = "User not found"))
-        if (user.password != password) {
-            halt(401, returnWithError("templates/login.html", "Incorrect credentials"))
-        }
-
-        session.logUserIn(user)
-        redirect("/")
+        val user = users.findOne(filter)
+        user?.let {
+            if (user.password != password) {
+                showError("login.html", "Incorrect credentials")
+            } else {
+                session.logUserIn(user)
+                redirect("/")
+            }
+        } ?: showError(resource = "login.html", errorMessage = "User not found")
     }
 
     get("/logout") {
@@ -129,14 +129,9 @@ val router = Router {
     path("/user", userRouter)
 
     post("/message") {
-        val messageContent = (formParameters["message"] ?: halt(400, "Message is required"))[0]
-        messages.insertOne(
-            Message(
-                (messages.findAll().map { it.id }.max() ?: 0) + 1,
-                session.loggedInUser().username, messageContent
-            )
-        )
-        redirect("/")
+        val messageContent = formParameters["message"] ?: halt(400, "Message is required")
+        messages.insertOne(Message(userId = session.loggedInUser().username, text = messageContent))
+        redirect("/public")
     }
 
     get(Resource("public"))
