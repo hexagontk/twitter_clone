@@ -31,6 +31,6 @@ services:
       SERVICE_mongodbUrl: mongodb://mongodb/hexagon_twitter_clone
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: main/Dockerfile
     ports:
       - 3090:9090
