@@ -3,7 +3,7 @@
 # RUNTIME
 #
 FROM openjdk:11
-LABEL description="minitwit API"
+
 USER root
 
 ENV TZ Europe/Madrid
@@ -16,7 +16,7 @@ EXPOSE 9090
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Project install
-COPY $PROJECT/build/install/$PROJECT /opt/$PROJECT
+COPY build/install/$PROJECT /opt/$PROJECT
 RUN touch /opt/$PROJECT
 
 # Process execution
