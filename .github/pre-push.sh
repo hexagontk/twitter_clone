@@ -8,6 +8,7 @@
 set -e
 
 docker-compose up -d mongodb
-./gradlew clean all
+./gradlew clean
 ./gradlew test
+./gradlew build
 docker-compose up -d --build --force-recreate
