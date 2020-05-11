@@ -10,7 +10,7 @@ services:
   mongodb:
     image: mongo:4.2.0
     ports:
-      - 3010:27017
+      - 27017:27017
 
   keycloak:
     image: jboss/keycloak:9.0.3
