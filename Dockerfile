@@ -7,7 +7,7 @@ LABEL description="minitwit API"
 USER root
 
 ENV TZ Europe/Madrid
-ENV PROJECT backend
+ENV PROJECT main
 
 # Machine setup
 VOLUME /tmp
