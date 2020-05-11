@@ -1,11 +1,9 @@
 package routes
 
 import com.hexagonkt.helpers.Resource
-import com.hexagonkt.http.server.Call
 import com.hexagonkt.http.server.Router
-import com.hexagonkt.templates.pebble.PebbleAdapter
-import com.hexagonkt.http.server.Session
 import com.hexagonkt.store.Store
+import com.hexagonkt.templates.pebble.PebbleAdapter
 import com.hexagonkt.web.template
 import injector
 import isLoggedIn
@@ -77,22 +75,24 @@ val router = Router {
         val username = formParameters["username"] ?: halt(400, "Username is required")
         val password = formParameters["password"] ?: halt(400, "Password is required")
 
-        if (users.findMany(mapOf(User::email.name to email)).isNotEmpty()) {
-            showError("register.html", "User with this email already exists")
+        when {
+            users.findMany(mapOf(User::email.name to email)).isNotEmpty() -> {
+                showError("register.html", "User with this email already exists")
+            }
+            users.findMany(mapOf(User::username.name to username)).isNotEmpty() -> {
+                showError("register.html", "User with this username already exists")
+            }
+            else -> {
+                users.insertOne(
+                    User(
+                        email,
+                        username,
+                        password
+                    )
+                )
+                redirect("/login")
+            }
         }
-
-        if (users.findMany(mapOf(User::username.name to username)).isNotEmpty()) {
-            showError("register.html", "User with this username already exists")
-        }
-
-        users.insertOne(
-            User(
-                email,
-                username,
-                password
-            )
-        )
-        redirect("/login")
     }
 
     get("/login") {

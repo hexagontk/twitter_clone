@@ -9,7 +9,6 @@ import com.hexagonkt.store.mongodb.MongoDbStore
 import models.Message
 import models.User
 import routes.router
-import java.util.*
 
 internal val injector = InjectionManager.apply {
     bindObject<ServerPort>(JettyServletAdapter())
