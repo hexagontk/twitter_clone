@@ -25,7 +25,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name Make pre-push.sh executable
+      - name: Make pre-push.sh executable
         run: chmod +x .github/pre-push.sh
 
       - name: Build & Test
