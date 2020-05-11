@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongodb
     environment:
-      SERVICE_mongodbUrl: mongodb://mongodb/real_world
+      SERVICE_mongodbUrl: mongodb://mongodb/hexagon_twitter_clone
     build:
       context: .
       dockerfile: backend/Dockerfile
