@@ -11,4 +11,5 @@ docker-compose up -d mongodb
 ./gradlew clean
 ./gradlew test
 ./gradlew build
+./gradlew installDist
 docker-compose up -d --build --force-recreate
