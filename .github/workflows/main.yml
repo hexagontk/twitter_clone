@@ -33,3 +33,8 @@ jobs:
 
       - name: Build & Test
         run: .github/pre-push.sh
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: build/reports/jacoco/test/jacocoTestReport.xml
