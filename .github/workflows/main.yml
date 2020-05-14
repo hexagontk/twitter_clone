@@ -1,0 +1,40 @@
+on:
+  - push
+  - pull_request
+
+jobs:
+  main:
+    name: Main
+    runs-on: ubuntu-latest
+
+    steps:
+      # SET UP
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      # BUILD
+      - name: Restore Cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Make pre-push.sh executable
+        run: chmod +x .github/pre-push.sh
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build & Test
+        run: .github/pre-push.sh
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: build/reports/jacoco/test/jacocoTestReport.xml

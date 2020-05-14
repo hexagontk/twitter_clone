@@ -1,0 +1,11 @@
+serverName: TwitterClone
+
+bindPort: 2010
+bindAddress: 127.0.0.1
+contextPath: /
+
+mongodbUrl: mongodb://localhost:27017/hexagon_twitter_clone_test
+test: foo
+keyStoreResource: keystore.p12
+keyStorePassword: storepass
+keyPairAlias: twitterClone

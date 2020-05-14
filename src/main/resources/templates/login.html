@@ -1,0 +1,23 @@
+{% extends "templates/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+<div class="col">
+    <h1>Login</h1>
+    <form id="login-form" class="form-horizontal" action="/login" method="post">
+        <div class="form-group">
+            <label for="email">Email:</label><br>
+            <input class="form-control" type="email" id="email" name="email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label><br>
+            <input class="form-control" type="password" id="password" name="password">
+        </div>
+        <input class="btn btn-primary" type="submit" value="Login">
+    </form>
+    <div style="text-align:center;">
+    <p>New? <a href="/register">Register</a></p>
+    </div>
+</div>
+{% endblock %}
