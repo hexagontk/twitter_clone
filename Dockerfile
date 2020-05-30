@@ -6,8 +6,8 @@ FROM openjdk:11
 
 USER root
 
-ENV TZ Europe/Madrid
-ENV PROJECT HexagonTwitterClone
+ENV TZ UTC
+ENV PROJECT twitter_clone
 
 # Machine setup
 VOLUME /tmp

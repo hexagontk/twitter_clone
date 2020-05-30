@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.72'
@@ -10,9 +11,7 @@ mainClassName = "ApplicationKt"
 
 jar {
     manifest {
-        attributes(
-                'Main-Class': 'ApplicationKt'
-        )
+        attributes('Main-Class': 'ApplicationKt')
     }
 }
 

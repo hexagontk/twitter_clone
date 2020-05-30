@@ -1,3 +1,6 @@
+
+name: Main
+
 on:
   - push
   - pull_request
@@ -24,12 +27,6 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
-
-      - name: Make pre-push.sh executable
-        run: chmod +x .github/pre-push.sh
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
 
       - name: Build & Test
         run: .github/pre-push.sh
