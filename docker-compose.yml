@@ -3,14 +3,14 @@
 # Check `README.md` for usage instructions.
 #
 
-version: '3'
+version: '3.9'
 
 services:
 
   mongodb:
-    image: mongo:4.2.0
+    image: mongo:6.0-jammy
     ports:
-      - 27017:27017
+      - "27017:27017"
 
   main:
     image: ${registry:-}realworld:1.0
@@ -25,4 +25,4 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 3090:9090
+      - "3090:9090"

@@ -1,63 +1,25 @@
 
 plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
-    id 'java-library-distribution'
-    id 'application'
-    id 'jacoco'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.20'
 }
 
-mainClassName = "ApplicationKt"
+apply from: "$gradleScripts/kotlin.gradle"
+apply from: "$gradleScripts/application.gradle"
 
-jar {
-    manifest {
-        attributes('Main-Class': 'ApplicationKt')
-    }
-}
+defaultTasks("test")
+
+mainClassName = 'ApplicationKt'
+applicationDefaultJvmArgs = ["-Xms64M", "-Xmx2G", "-XX:+UseNUMA", "-XX:+UseParallelGC"]
 
 group 'com.hexagonkt.twitterclone'
-version '1.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
-
-repositories {
-    jcenter()
-    mavenCentral()
-    maven {
-        url  "https://dl.bintray.com/hexagonkt/hexagon"
-    }
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-    }
-}
+version '1.0'
 
 dependencies {
     implementation "com.hexagonkt:http_server_jetty:$hexagonVersion"
-    implementation "com.hexagonkt:hexagon_web:$hexagonVersion"
-    implementation "com.hexagonkt:store_mongodb:$hexagonVersion"
     implementation "com.hexagonkt:templates_pebble:$hexagonVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "com.hexagonkt.extra:web:$hexagonVersion"
+    implementation "com.hexagonkt.extra:injection:$hexagonVersion"
+    implementation "com.hexagonkt.extra:store_mongodb:$hexagonVersion"
 
-    testImplementation "com.hexagonkt:http_client_ahc:$hexagonVersion"
-    testImplementation "com.hexagonkt:port_http_client:$hexagonVersion"
-    testImplementation "com.hexagonkt:port_http_server:$hexagonVersion:test"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.5.1"
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-test {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
-}
-jacocoTestReport {
-    dependsOn test
+    testImplementation "com.hexagonkt:http_client_jetty:$hexagonVersion"
 }

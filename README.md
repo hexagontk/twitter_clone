@@ -1,18 +1,15 @@
 
 # Twitter Clone
-
 This is a Mini Twitter Clone application developed using HexagonKt, based on
 [this](http://sparkjava.com/tutorials/twitter-clone) Spark tutorial. It makes use of Pebble to
 render pages, and MongoDB for database functions.
 
 ## Requirements
-
 * Java + Kotlin
 * Gradle
 * MongoDB
 
 ## How to run
-
 Navigate to the project's root folder and run the following commands in order
 
 1. `./gradlew build`
@@ -22,14 +19,12 @@ Navigate to the project's root folder and run the following commands in order
 Open `http://localhost:2010/` in your browser.
 
 ## General Functionality
-
 * Sign up and register
 * Public and personal timelines
 * Follow/unfollow users
 * User pages
 
 ## Architecture
-
 The main class, which starts the server, is `Application.kt`.
 
 The `models` package contains the models to be stored in the database.
@@ -46,7 +41,6 @@ The `service.yaml` file defines several local settings such as the server port n
 etc. This can be modified, if required, based on local settings.
 
 ## Endpoints
-
 Note: for all `POST` endpoints, data is expected in the form of form parameters
 (x-www-form-url-encoded).
 

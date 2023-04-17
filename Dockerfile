@@ -2,7 +2,7 @@
 #
 # RUNTIME
 #
-FROM openjdk:11
+FROM openjdk:17
 
 USER root
 

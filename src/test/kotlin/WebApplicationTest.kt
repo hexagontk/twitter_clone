@@ -1,10 +1,12 @@
-import com.hexagonkt.http.client.Client
-import com.hexagonkt.http.client.ahc.AhcAdapter
+import com.hexagonkt.http.client.HttpClient
+import com.hexagonkt.http.client.HttpClientSettings
+import com.hexagonkt.http.client.jetty.JettyClientAdapter
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.net.URL
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WebApplicationTest {
@@ -19,9 +21,10 @@ class WebApplicationTest {
 
     @Test
     fun testServerStarts() {
-        val response = Client(AhcAdapter(), endpoint = "http://$hostname:$port").get("/ping")
-        assertEquals(response.status, 200)
-        assertEquals(response.body, "pong")
+        val settings = HttpClientSettings(baseUrl = URL("http://$hostname:$port"))
+        val response = HttpClient(JettyClientAdapter(), settings).get("/ping")
+        assertEquals(200, response.status.code)
+        assertEquals("pong", response.body)
     }
 
     @AfterAll

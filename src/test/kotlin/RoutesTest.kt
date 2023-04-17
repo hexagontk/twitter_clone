@@ -1,23 +1,23 @@
-import com.hexagonkt.http.Method
-import com.hexagonkt.http.Part
-import com.hexagonkt.http.Path
-import com.hexagonkt.http.client.Client
-import com.hexagonkt.http.client.Request
-import com.hexagonkt.http.client.Response
-import com.hexagonkt.http.client.ahc.AhcAdapter
+import com.hexagonkt.http.client.HttpClient
+import com.hexagonkt.http.client.HttpClientSettings
+import com.hexagonkt.http.client.jetty.JettyClientAdapter
+import com.hexagonkt.http.model.*
+import com.hexagonkt.http.model.HttpMethod.POST
 import com.hexagonkt.store.Store
 import models.Message
 import models.User
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
+import java.net.URL
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(PER_CLASS)
 class RoutesTest {
-
     private val hostname = "127.0.0.1"
     private val port = 2010
 
-    private val client = Client(AhcAdapter(), endpoint = "http://$hostname:$port")
+    private val settings = HttpClientSettings(baseUrl = URL("http://$hostname:$port"))
+    private val client = HttpClient(JettyClientAdapter(), settings)
 
     private val users = injector.inject<Store<User, String>>(User::class)
     private val messages = injector.inject<Store<Message, String>>(Message::class)
@@ -31,203 +31,172 @@ class RoutesTest {
     private val testMessage3 = Message(userId = testUser2.username, text = "Hello world!")
     private val testMessage4 = Message(userId = testUser3.username, text = "I am bored.")
 
-    private fun performRegistration(email: String, username: String, password: String): Response {
-        val parts = mapOf(
-            "email" to Part("email", email),
-            "username" to Part("username", username),
-            "password" to Part("password", password)
+    private fun performRegistration(
+        email: String, username: String, password: String
+    ): HttpResponsePort {
+
+        val parts = listOf(
+            HttpPart("email", email),
+            HttpPart("username", username),
+            HttpPart("password", password)
         )
-        val request = Request(
-            Method.POST,
-            Path("/register"),
+        val request = HttpRequest(
+            method = POST,
+            path = "/register",
             parts = parts
         )
         return client.send(request)
     }
 
-    private fun performLogin(email: String, password: String): Response {
-        val parts = mapOf(
-            "email" to Part("email", email),
-            "password" to Part("password", password)
+    private fun performLogin(email: String, password: String): HttpResponsePort {
+        val parts = listOf(
+            HttpPart("email", email),
+            HttpPart("password", password)
         )
-        val request = Request(
-            Method.POST,
-            Path("/login"),
+        val request = HttpRequest(
+            method = POST,
+            path = "/login",
             parts = parts
         )
         return client.send(request)
     }
 
-    private fun sendMessage(text: String): Response {
-        val parts = mapOf(
-            "message" to Part("message", text)
+    private fun sendMessage(text: String): HttpResponsePort {
+        val parts = listOf(
+            HttpPart("message", text)
         )
-        val request = Request(
-            Method.POST,
-            Path("/message"),
+        val request = HttpRequest(
+            method = POST,
+            path = "/message",
             parts = parts
         )
         return client.send(request)
     }
 
-    @BeforeAll
-    fun startServer() {
+    @BeforeAll fun startServer() {
         injector
         server.start()
     }
 
-    @Test
-    fun testRedirectsToPublicTimelineIfNotLoggedIn() {
+    @Test fun testRedirectsToPublicTimelineIfNotLoggedIn() {
         val response = client.get("/")
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/public")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/public", it.value)
         }
     }
 
-    @Test
-    fun testRegisterPageRendersCorrectly() {
+    @Test fun testRegisterPageRendersCorrectly() {
         val response = client.get("/register")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("Register"))
-        }
+        assertTrue(response.bodyString().contains("Register"))
     }
 
-    @Test
-    fun testRegistrationWorksCorrectly() {
+    @Test fun testRegistrationWorksCorrectly() {
         val response = performRegistration(
             testUser.email,
             testUser.username,
             testUser.password
         )
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/login")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/login", it.value)
         }
     }
 
-    @Test
-    fun testRegistrationWithDuplicateEmailReturnsError() {
+    @Test fun testRegistrationWithDuplicateEmailReturnsError() {
         users.insertOne(testUser)
         val response = performRegistration(
             "testuser@mail.com", // Note that email is same
             "Different Test User", // But username is different
             "testpassword"
         )
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("User with this email already exists"))
-        }
+        assertTrue(response.bodyString().contains("User with this email already exists"))
     }
 
-    @Test
-    fun testRegistrationWithDuplicateUsernameReturnsError() {
+    @Test fun testRegistrationWithDuplicateUsernameReturnsError() {
         users.insertOne(testUser)
         val response = performRegistration(
             "differenttestuser@mail.com", // Note that email is different
             "Test User", // But username is same
             "testpassword"
         )
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("User with this username already exists"))
-        }
+        assertTrue(response.bodyString().contains("User with this username already exists"))
     }
 
-    @Test
-    fun testLoginPageRendersCorrectly() {
+    @Test fun testLoginPageRendersCorrectly() {
         val response = client.get("/login")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("Login"))
-        }
+        assertTrue(response.bodyString().contains("Login"))
     }
 
-    @Test
-    fun testLoginWorksCorrectly() {
+    @Test fun testLoginWorksCorrectly() {
         users.insertOne(testUser)
-        val response = performLogin(
-            testUser.email,
-            testUser.password
-        )
-        assertEquals(response.status, 302)
+        val response = performLogin(testUser.email, testUser.password)
+        assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/", it.value)
         }
     }
 
-    @Test
-    fun testLoginWithInvalidEmailReturnsError() {
+    @Test fun testLoginWithInvalidEmailReturnsError() {
         users.insertOne(testUser)
-        val response = performLogin(
-            "invalid@mail.com",
-            "testpassword"
-        )
-        assertEquals(response.status, 200)
+        val response = performLogin("invalid@mail.com", "testpassword")
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("User not found"))
-        }
+        assertTrue(response.bodyString().contains("User not found"))
     }
 
-    @Test
-    fun testLoginWithInvalidPasswordReturnsError() {
+    @Test fun testLoginWithInvalidPasswordReturnsError() {
         users.insertOne(testUser)
-        val response = performLogin(
-            testUser.email,
-            "incorrectpassword"
-        )
-        assertEquals(response.status, 200)
+        val response = performLogin(testUser.email, "incorrectpassword")
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
-            assertTrue(it.contains("Incorrect credentials"))
-        }
+        assertTrue(response.bodyString().contains("Incorrect credentials"))
     }
 
-    @Test
-    fun testLoginButtonDisplayedWhenNotLoggedIn() {
+    @Test fun testLoginButtonDisplayedWhenNotLoggedIn() {
         val response = client.get("/public")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("Login"))
             assertFalse(it.contains("Logout"))
         }
     }
 
-    @Test
-    fun testLogoutButtonDisplayedWhenLoggedIn() {
+    @Test fun testLogoutButtonDisplayedWhenLoggedIn() {
         users.insertOne(testUser)
         performLogin(testUser.email, testUser.password)
 
         val response = client.get("/public")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("Logout"))
             assertFalse(it.contains("Login"))
         }
     }
 
-    @Test
-    fun testPublicTimelineRendersCorrectlyWhenNotLoggedIn() {
+    @Test fun testPublicTimelineRendersCorrectlyWhenNotLoggedIn() {
         messages.insertMany(listOf(testMessage, testMessage2, testMessage3, testMessage4))
 
         val response = client.get("/public")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("Public Timeline"))
             assertFalse(it.contains("What's on your mind?"))
             assertTrue(it.contains(testMessage.text))
@@ -237,16 +206,15 @@ class RoutesTest {
         }
     }
 
-    @Test
-    fun testPublicTimelineRendersCorrectlyWhenLoggedIn() {
+    @Test fun testPublicTimelineRendersCorrectlyWhenLoggedIn() {
         users.insertOne(testUser)
         messages.insertMany(listOf(testMessage, testMessage2, testMessage3, testMessage4))
         performLogin(testUser.email, testUser.password)
 
         val response = client.get("/public")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("Public Timeline"))
             assertTrue(it.contains("What's on your mind?"))
             assertTrue(it.contains(testMessage.text))
@@ -256,32 +224,30 @@ class RoutesTest {
         }
     }
 
-    @Test
-    fun testMessageInsertionWorksCorrectly() {
+    @Test fun testMessageInsertionWorksCorrectly() {
         users.insertOne(testUser)
         performLogin(testUser.email, testUser.password)
 
         val response = sendMessage(testMessage.text)
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/public")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/public", it.value)
         }
         assertNotNull(
             messages.findOne(mapOf(Message::text.name to testMessage.text, User::email.name to testUser.username))
         )
     }
 
-    @Test
-    fun testUserPageRendersCorrectlyWhenNotLoggedIn() {
+    @Test fun testUserPageRendersCorrectlyWhenNotLoggedIn() {
         users.insertOne(testUser)
         messages.insertMany(listOf(testMessage, testMessage2))
 
         val response = client.get("/user/${testUser.username}")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("${testUser.username}'s Timeline"))
             assertFalse(it.contains("What's on your mind?"))
             assertTrue(it.contains(testMessage.text))
@@ -291,16 +257,15 @@ class RoutesTest {
         }
     }
 
-    @Test
-    fun testUserPageRendersCorrectlyWhenLoggedIn() {
+    @Test fun testUserPageRendersCorrectlyWhenLoggedIn() {
         users.insertOne(testUser)
         messages.insertMany(listOf(testMessage, testMessage2))
         performLogin(testUser.email, testUser.password)
 
         val response = client.get("/user/${testUser.username}")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("${testUser.username}'s Timeline"))
             assertTrue(it.contains("What's on your mind?"))
             assertTrue(it.contains(testMessage.text))
@@ -310,16 +275,15 @@ class RoutesTest {
         }
     }
 
-    @Test
-    fun testOtherUserPageRendersCorrectlyWhenLoggedIn() {
+    @Test fun testOtherUserPageRendersCorrectlyWhenLoggedIn() {
         users.insertMany(listOf(testUser, testUser2))
         messages.insertMany(listOf(testMessage, testMessage2, testMessage3))
         performLogin(testUser2.email, testUser2.password)
 
         val response = client.get("/user/${testUser.username}")
-        assertEquals(response.status, 200)
+        assertEquals(200, response.status.code)
         assertNotNull(response.body)
-        response.body?.let {
+        response.bodyString().let {
             assertTrue(it.contains("${testUser.username}'s Timeline"))
             assertFalse(it.contains("What's on your mind?"))
             assertTrue(it.contains(testMessage.text))
@@ -329,60 +293,55 @@ class RoutesTest {
         }
     }
 
-    @Test
-    fun testFollowWorksCorrectly() {
+    @Test fun testFollowWorksCorrectly() {
         users.insertMany(listOf(testUser, testUser2))
         performLogin(testUser.email, testUser.password)
         val response = client.get("/user/follow/${testUser2.username}")
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/user/${testUser2.username}")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/user/${testUser2.username}", it.value)
         }
         users.findOne(mapOf(User::username.name to testUser.username))?.following?.contains(testUser2.username)?.let {
             assertTrue(it)
         }
     }
 
-    @Test
-    fun testUnfollowWorksCorrectly() {
+    @Test fun testUnfollowWorksCorrectly() {
         users.insertMany(listOf(testUser, testUser2))
         performLogin(testUser.email, testUser.password)
 
         client.get("/user/follow/${testUser2.username}")
         val response = client.get("/user/unfollow/${testUser2.username}")
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/user/${testUser2.username}")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/user/${testUser2.username}", it.value)
         }
         users.findOne(mapOf(User::username.name to testUser.username))?.following?.contains(testUser2.username)?.let {
             assertFalse(it)
         }
     }
 
-    @Test
-    fun testLogoutWorksCorrectly() {
+    @Test fun testLogoutWorksCorrectly() {
         users.insertOne(testUser)
         performLogin(testUser.email, testUser.password)
         val response = client.get("/logout")
-        assertEquals(response.status, 302)
+        assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
-            assertTrue(it.size == 1)
-            assertEquals(it[0], "http://$hostname:$port/")
+            assertTrue(it.values.size == 1)
+            assertEquals("http://$hostname:$port/", it.value)
         }
     }
 
-    @AfterEach
-    fun reset() {
+    @AfterEach fun reset() {
         client.get("/logout")
         users.drop()
         messages.drop()
     }
 
-    @AfterAll
-    fun shutdown() {
+    @AfterAll fun shutdown() {
         server.stop()
     }
 }
