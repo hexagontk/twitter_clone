@@ -26,7 +26,7 @@ val router: HttpHandler = path {
     val users = injector.inject<Store<User, String>>(User::class)
     val messages = injector.inject<Store<Message, String>>(Message::class)
 
-    on("/ping") {
+    get("/ping") {
         ok("pong", contentType = ContentType(TEXT_PLAIN))
     }
 
@@ -75,9 +75,9 @@ val router: HttpHandler = path {
     }
 
     post("/register") {
-        val email = formParameters["email"]?.value ?: return@post badRequest("Email is required")
-        val username = formParameters["username"]?.value ?: return@post badRequest("Username is required")
-        val password = formParameters["password"]?.value ?: return@post badRequest("Password is required")
+        val email = formParameters["email"]?.string() ?: return@post badRequest("Email is required")
+        val username = formParameters["username"]?.string() ?: return@post badRequest("Username is required")
+        val password = formParameters["password"]?.string() ?: return@post badRequest("Password is required")
 
         when {
             users.findMany(mapOf(User::email.name to email)).isNotEmpty() -> {
@@ -131,7 +131,7 @@ val router: HttpHandler = path {
     path("/user", userRouter)
 
     post("/message") {
-        val messageContent = formParameters["message"]?.value ?: return@post badRequest("Message is required")
+        val messageContent = formParameters["message"]?.string() ?: return@post badRequest("Message is required")
         messages.insertOne(Message(userId = loggedInUser().username, text = messageContent))
         send(FOUND_302, headers = response.headers + Header("location", "/public"))
     }

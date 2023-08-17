@@ -8,7 +8,7 @@ version: '3.9'
 services:
 
   mongodb:
-    image: mongo:6.0-jammy
+    image: docker.io/mongo:6.0-jammy
     ports:
       - "27017:27017"
 
@@ -20,9 +20,8 @@ services:
     depends_on:
       - mongodb
     environment:
-      SERVICE_mongodbUrl: mongodb://mongodb/hexagon_twitter_clone
+      mongodbUrl: mongodb://mongodb/hexagon_twitter_clone
     build:
       context: .
-      dockerfile: Dockerfile
     ports:
       - "3090:9090"

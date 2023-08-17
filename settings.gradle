@@ -2,8 +2,8 @@
 rootProject.name = "twitter_clone"
 
 gradle.rootProject {
-    extensions.gradleScripts = "https://raw.githubusercontent.com/hexagonkt/hexagon/2.8.0/gradle"
+    extensions.gradleScripts = "https://raw.githubusercontent.com/hexagonkt/hexagon/3.0.0/gradle"
 
-    extensions.hexagonVersion = "2.8.0"
-    extensions.hexagonExtraVersion = "2.8.0"
+    extensions.hexagonVersion = "3.0.0"
+    extensions.hexagonExtraVersion = "3.0.0"
 }

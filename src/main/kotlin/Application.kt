@@ -11,15 +11,17 @@ import models.Message
 import models.User
 import routes.router
 
-internal val injector = Injector(
-    Module().apply {
-        bindInstances<HttpServerPort>(JettyServletAdapter())
-        bindInstances(User::class, createUserStore())
-        bindInstances(Message::class, createMessageStore())
-    }
-)
+internal val injector by lazy {
+    Injector(
+        Module().apply {
+            bindInstances<HttpServerPort>(JettyServletAdapter())
+            bindInstances(User::class, createUserStore())
+            bindInstances(Message::class, createMessageStore())
+        }
+    )
+}
 
-internal val server = HttpServer(JettyServletAdapter(), handler = router)
+internal val server by lazy { HttpServer(JettyServletAdapter(), handler = router) }
 
 internal fun createUserStore(): Store<User, String> {
     val mongodbUrl = Jvm.systemSetting<String>("mongodbUrl")
