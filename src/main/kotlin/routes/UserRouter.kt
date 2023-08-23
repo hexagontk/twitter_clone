@@ -3,10 +3,10 @@ package routes
 import com.hexagonkt.http.handlers.path
 import com.hexagonkt.http.model.FOUND_302
 import com.hexagonkt.http.model.Header
-import com.hexagonkt.store.Store
 import com.hexagonkt.templates.pebble.PebbleAdapter
 import com.hexagonkt.web.template
-import injector
+import createMessageStore
+import createUserStore
 import isLoggedIn
 import loggedInUser
 import models.Message
@@ -15,8 +15,8 @@ import java.net.URL
 
 val userRouter = path {
 
-    val users = injector.inject<Store<User, String>>(User::class)
-    val messages = injector.inject<Store<Message, String>>(Message::class)
+    val users = createUserStore()
+    val messages = createMessageStore()
 
     get("/follow/{username}") {
         val username: String = pathParameters["username"] ?: error("")

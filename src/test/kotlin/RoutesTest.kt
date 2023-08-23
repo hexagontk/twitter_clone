@@ -3,7 +3,6 @@ import com.hexagonkt.http.client.HttpClientSettings
 import com.hexagonkt.http.client.jetty.JettyClientAdapter
 import com.hexagonkt.http.model.*
 import com.hexagonkt.http.model.HttpMethod.POST
-import com.hexagonkt.store.Store
 import models.Message
 import models.User
 import org.junit.jupiter.api.*
@@ -17,10 +16,10 @@ class RoutesTest {
     private val port = 2010
 
     private val settings by lazy { HttpClientSettings(baseUrl = URL("http://$hostname:$port")) }
-    private val client by lazy { HttpClient(JettyClientAdapter(), settings) }
+    private val client by lazy { HttpClient(JettyClientAdapter(), settings).apply { start() } }
 
-    private val users by lazy { injector.inject<Store<User, String>>(User::class) }
-    private val messages by lazy { injector.inject<Store<Message, String>>(Message::class) }
+    private val users by lazy { createUserStore() }
+    private val messages by lazy { createMessageStore() }
 
     private val testUser = User("testuser@mail.com", "Test User", "testpassword")
     private val testUser2 = User("testuser2@mail.com", "Test User 2", "testpassword")
@@ -30,10 +29,6 @@ class RoutesTest {
     private val testMessage2 = Message(userId = testUser.username, text = "How are you?")
     private val testMessage3 = Message(userId = testUser2.username, text = "Hello world!")
     private val testMessage4 = Message(userId = testUser3.username, text = "I am bored.")
-
-    init {
-        System.setProperty("mongodbUrl", "mongodb://localhost/hexagon_twitter_clone")
-    }
 
     private fun performRegistration(
         email: String, username: String, password: String
@@ -78,7 +73,7 @@ class RoutesTest {
     }
 
     @BeforeAll fun startServer() {
-        injector
+        System.setProperty("mongodbUrl", "mongodb://localhost/hexagon_twitter_clone")
         server.start()
     }
 

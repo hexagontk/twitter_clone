@@ -19,7 +19,6 @@ dependencies {
     implementation "com.hexagonkt:http_server_jetty:$hexagonVersion"
     implementation "com.hexagonkt:templates_pebble:$hexagonVersion"
     implementation "com.hexagonkt:web:$hexagonVersion"
-    implementation "com.hexagonkt.extra:injection:$hexagonExtraVersion"
     implementation "com.hexagonkt.extra:store_mongodb:$hexagonExtraVersion"
 
     testImplementation "com.hexagonkt:http_client_jetty:$hexagonVersion"

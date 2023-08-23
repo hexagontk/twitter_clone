@@ -6,9 +6,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
 import java.net.URL
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(PER_CLASS)
 class WebApplicationTest {
 
     private val hostname = "127.0.0.1"
@@ -16,13 +17,15 @@ class WebApplicationTest {
 
     @BeforeAll
     fun startServer() {
+        System.setProperty("mongodbUrl", "mongodb://localhost/hexagon_twitter_clone")
         server.start()
     }
 
     @Test
     fun testServerStarts() {
         val settings = HttpClientSettings(baseUrl = URL("http://$hostname:$port"))
-        val response = HttpClient(JettyClientAdapter(), settings).get("/ping")
+        val client = HttpClient(JettyClientAdapter(), settings).apply { start() }
+        val response = client.get("/ping")
         assertEquals(200, response.status.code)
         assertEquals("pong", response.body)
     }
