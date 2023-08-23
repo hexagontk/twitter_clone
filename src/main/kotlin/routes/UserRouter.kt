@@ -24,7 +24,7 @@ val userRouter = path {
         val user = users.findOne(filter) ?: return@get notFound("User not found")
         users.updateOne(
             loggedInUser().username,
-            mapOf("following" to loggedInUser().following.apply { this.add(user.username) })
+            mapOf("following" to loggedInUser().let { it.copy(following = it.following + user.username) })
         )
         send(FOUND_302, headers = response.headers + Header("location", "/user/$username"))
     }
@@ -35,7 +35,7 @@ val userRouter = path {
         val user = users.findOne(filter) ?: return@get notFound("User not found")
         users.updateOne(
             loggedInUser().username,
-            mapOf("following" to loggedInUser().following.apply { this.remove(user.username) })
+            mapOf("following" to loggedInUser().let { it.copy(following = it.following - user.username) })
         )
         send(FOUND_302, headers = response.headers + Header("location", "/user/$username"))
     }
