@@ -8,7 +8,7 @@ version: '3.9'
 services:
 
   mongodb:
-    image: docker.io/mongo:6.0-jammy
+    image: docker.io/mongo:7.0-jammy
     ports:
       - "27017:27017"
 

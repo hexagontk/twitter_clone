@@ -2,7 +2,7 @@
 #
 # RUNTIME
 #
-FROM openjdk:17
+FROM docker.io/eclipse-temurin:17-jre-alpine
 
 USER root
 
