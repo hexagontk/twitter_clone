@@ -45,7 +45,7 @@ val userRouter = path {
             loggedInUser.username,
             mapOf("following" to loggedInUser.following)
         )
-        send(FOUND_302, URI("/user/$username"))
+        redirect(FOUND_302, URI("/user/$username"))
     }
 
     get("/{username}") {

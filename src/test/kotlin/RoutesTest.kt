@@ -1,3 +1,4 @@
+import com.hexagonkt.core.fieldsMapOf
 import com.hexagonkt.http.client.HttpClient
 import com.hexagonkt.http.client.HttpClientSettings
 import com.hexagonkt.http.client.jetty.JettyClientAdapter
@@ -62,13 +63,10 @@ class RoutesTest {
     }
 
     private fun sendMessage(text: String): HttpResponsePort {
-        val parts = listOf(
-            HttpPart("message", text)
-        )
         val request = HttpRequest(
             method = POST,
             path = "/message",
-            parts = parts
+            formParameters = FormParameters(FormParameter("message", text))
         )
         return client.send(request)
     }
@@ -228,16 +226,19 @@ class RoutesTest {
         users.insertOne(testUser)
         performLogin(testUser.email, testUser.password)
 
-        val response = sendMessage(testMessage.text)
+        val text = testMessage.text
+        val username = testUser.username
+
+        val response = sendMessage(text)
         assertEquals(302, response.status.code)
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
             assertEquals("/public", it.value)
         }
-        assertNotNull(
-            messages.findOne(mapOf(Message::text.name to testMessage.text, User::email.name to testUser.username))
-        )
+        val filter = fieldsMapOf(Message::text to text, Message::userId to username)
+        val message = messages.findOne(filter)
+        assertNotNull(message)
     }
 
     @Test fun testUserPageRendersCorrectlyWhenNotLoggedIn() {
@@ -311,7 +312,12 @@ class RoutesTest {
         users.insertMany(listOf(testUser, testUser2))
         performLogin(testUser.email, testUser.password)
 
-        client.get("/user/follow/${testUser2.username}")
+        val followResponse = client.get("/user/follow/${testUser2.username}")
+        assertEquals(302, followResponse.status.code)
+        followResponse.headers["Location"]?.let {
+            assertTrue(it.values.size == 1)
+            assertEquals("/user/${testUser2.username}", it.value)
+        }
         val response = client.get("/user/unfollow/${testUser2.username}")
         assertEquals(302, response.status.code)
         response.headers["Location"]?.let {
