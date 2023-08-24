@@ -12,7 +12,8 @@ import models.User
 import routes.router
 import java.time.LocalDateTime
 
-internal val server by lazy { HttpServer(JettyServletAdapter(), handler = router) }
+internal val adapter: JettyServletAdapter by lazy { JettyServletAdapter() }
+internal val server: HttpServer by lazy { HttpServer(adapter, handler = router) }
 
 internal fun createUserStore(): Store<User, String> {
     val mongodbUrl = Jvm.systemSetting<String>("mongodbUrl")
@@ -55,7 +56,7 @@ internal fun createMessageStore(): Store<Message, String> {
             Message::id to it.id,
             Message::userId to it.userId,
             Message::text to it.text,
-            Message::date to it.date,
+            Message::date to it.date.toString(),
             Message::dateString to it.dateString,
         )
     }

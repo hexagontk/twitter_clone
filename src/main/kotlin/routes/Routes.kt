@@ -5,7 +5,6 @@ import com.hexagonkt.http.handlers.HttpHandler
 import com.hexagonkt.http.handlers.path
 import com.hexagonkt.http.model.ContentType
 import com.hexagonkt.http.model.FOUND_302
-import com.hexagonkt.http.model.Header
 import com.hexagonkt.http.model.NOT_FOUND_404
 import com.hexagonkt.http.server.callbacks.UrlCallback
 import com.hexagonkt.templates.pebble.PebbleAdapter
@@ -19,11 +18,11 @@ import loggedInUser
 import models.Message
 import models.User
 import showError
+import java.net.URI
 import java.net.URL
 
 val router: HttpHandler by lazy {
     path {
-
         val users = createUserStore()
         val messages = createMessageStore()
 
@@ -32,9 +31,8 @@ val router: HttpHandler by lazy {
         }
 
         get("/") {
-            if (!isLoggedIn()) {
-                return@get send(FOUND_302, headers = response.headers + Header("location", "/public"))
-            }
+            if (!isLoggedIn())
+                return@get redirect(FOUND_302, URI("/public"))
 
             val messageFeed = if (loggedInUser().following.isEmpty()) {
                 emptyList()
@@ -82,11 +80,11 @@ val router: HttpHandler by lazy {
 
             when {
                 users.findMany(mapOf(User::email.name to email)).isNotEmpty() -> {
-                    showError("register.html", "User with this email already exists")
+                    showError("classpath:templates/register.html", "User with this email already exists")
                 }
 
                 users.findMany(mapOf(User::username.name to username)).isNotEmpty() -> {
-                    showError("register.html", "User with this username already exists")
+                    showError("classpath:templates/register.html", "User with this username already exists")
                 }
 
                 else -> {
@@ -97,7 +95,7 @@ val router: HttpHandler by lazy {
                             password
                         )
                     )
-                    send(FOUND_302, headers = response.headers + Header("location", "/login"))
+                    redirect(FOUND_302, URI("/login"))
                 }
             }
         }
@@ -120,15 +118,13 @@ val router: HttpHandler by lazy {
                 if (user.password != password) {
                     showError("classpath:templates/login.html", "Incorrect credentials")
                 } else {
-                    logUserIn(user)
-                    send(FOUND_302, headers = response.headers + Header("location", "/"))
+                    logUserIn(user).redirect(FOUND_302, URI("/"))
                 }
             } ?: showError(resource = "classpath:templates/login.html", errorMessage = "User not found")
         }
 
         get("/logout") {
-            logUserOut()
-            send(FOUND_302, headers = response.headers + Header("location", "/"))
+            logUserOut().redirect(FOUND_302, URI("/"))
         }
 
         path("/user", userRouter)
@@ -136,7 +132,7 @@ val router: HttpHandler by lazy {
         post("/message") {
             val messageContent = formParameters["message"]?.string() ?: return@post badRequest("Message is required")
             messages.insertOne(Message(userId = loggedInUser().username, text = messageContent))
-            send(FOUND_302, headers = response.headers + Header("location", "/public"))
+            redirect(FOUND_302, URI("/public"))
         }
 
         after(pattern = "/*", status = NOT_FOUND_404, callback = UrlCallback(URL("classpath:public")))

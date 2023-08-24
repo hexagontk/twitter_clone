@@ -14,16 +14,17 @@ import java.net.URL
 class RoutesTest {
     private val hostname = "127.0.0.1"
     private val port = 2010
+    private val baseUrl = URL("http://$hostname:$port")
 
-    private val settings by lazy { HttpClientSettings(baseUrl = URL("http://$hostname:$port")) }
+    private val settings by lazy { HttpClientSettings(baseUrl = baseUrl, followRedirects = false) }
     private val client by lazy { HttpClient(JettyClientAdapter(), settings).apply { start() } }
 
     private val users by lazy { createUserStore() }
     private val messages by lazy { createMessageStore() }
 
-    private val testUser = User("testuser@mail.com", "Test User", "testpassword")
-    private val testUser2 = User("testuser2@mail.com", "Test User 2", "testpassword")
-    private val testUser3 = User("testuser3@mail.com", "Test User 3", "testpassword")
+    private val testUser = User("testuser@mail.com", "Test_User", "testpassword")
+    private val testUser2 = User("testuser2@mail.com", "Test_User_2", "testpassword")
+    private val testUser3 = User("testuser3@mail.com", "Test_User_3", "testpassword")
 
     private val testMessage = Message(userId = testUser.username, text = "Hello everyone!")
     private val testMessage2 = Message(userId = testUser.username, text = "How are you?")
@@ -83,7 +84,7 @@ class RoutesTest {
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/public", it.value)
+            assertEquals("/public", it.value)
         }
     }
 
@@ -104,7 +105,7 @@ class RoutesTest {
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/login", it.value)
+            assertEquals("/login", it.value)
         }
     }
 
@@ -112,7 +113,7 @@ class RoutesTest {
         users.insertOne(testUser)
         val response = performRegistration(
             "testuser@mail.com", // Note that email is same
-            "Different Test User", // But username is different
+            "Different_Test_User", // But username is different
             "testpassword"
         )
         assertEquals(200, response.status.code)
@@ -124,7 +125,7 @@ class RoutesTest {
         users.insertOne(testUser)
         val response = performRegistration(
             "differenttestuser@mail.com", // Note that email is different
-            "Test User", // But username is same
+            "Test_User", // But username is same
             "testpassword"
         )
         assertEquals(200, response.status.code)
@@ -146,7 +147,7 @@ class RoutesTest {
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/", it.value)
+            assertEquals("/", it.value)
         }
     }
 
@@ -232,7 +233,7 @@ class RoutesTest {
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/public", it.value)
+            assertEquals("/public", it.value)
         }
         assertNotNull(
             messages.findOne(mapOf(Message::text.name to testMessage.text, User::email.name to testUser.username))
@@ -299,7 +300,7 @@ class RoutesTest {
         assertEquals(302, response.status.code)
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/user/${testUser2.username}", it.value)
+            assertEquals("/user/${testUser2.username}", it.value)
         }
         users.findOne(mapOf(User::username.name to testUser.username))?.following?.contains(testUser2.username)?.let {
             assertTrue(it)
@@ -315,7 +316,7 @@ class RoutesTest {
         assertEquals(302, response.status.code)
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/user/${testUser2.username}", it.value)
+            assertEquals("/user/${testUser2.username}", it.value)
         }
         users.findOne(mapOf(User::username.name to testUser.username))?.following?.contains(testUser2.username)?.let {
             assertFalse(it)
@@ -330,7 +331,7 @@ class RoutesTest {
         assertNotNull(response.headers["Location"])
         response.headers["Location"]?.let {
             assertTrue(it.values.size == 1)
-            assertEquals("http://$hostname:$port/", it.value)
+            assertEquals("/", it.value)
         }
     }
 

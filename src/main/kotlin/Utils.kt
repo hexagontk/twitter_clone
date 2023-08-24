@@ -21,18 +21,22 @@ fun HttpContext.isLoggedIn(): Boolean =
     sessions.containsKey(request.cookiesMap()[SESSION_COOKIE]?.value)
 
 fun HttpContext.loggedInUser(): User =
-    sessions[request.cookiesMap()[SESSION_COOKIE]?.value ?: error("")] ?: error("")
+    sessions[
+        request.cookiesMap()[SESSION_COOKIE]?.value
+            ?: error("$SESSION_COOKIE cookie not found")
+    ]
+    ?: error("Session not found")
 
 fun HttpContext.logUserIn(user: User): HttpContext {
     val uuid = UUID.randomUUID().toBase64()
     sessions[uuid] = user
-    return send(response = response.with(cookies = response.cookies + Cookie(SESSION_COOKIE, uuid)))
+    return send(cookies = response.cookies + Cookie(SESSION_COOKIE, uuid))
 }
 
 fun HttpContext.logUserOut(): HttpContext {
-    val c = request.cookiesMap()[SESSION_COOKIE]?.delete() ?: error("")
+    val c = request.cookiesMap()[SESSION_COOKIE]?.delete() ?: error("$SESSION_COOKIE cookie not found")
     sessions.remove(c.name)
-    return send(response = response.with(cookies = response.cookies + c))
+    return send(cookies = response.cookies + c)
 }
 
 fun HttpContext.showError(resource: String, errorMessage: String) =
