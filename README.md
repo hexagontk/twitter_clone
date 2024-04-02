@@ -1,6 +1,6 @@
 
 # Twitter Clone
-This is a Mini Twitter Clone application developed using HexagonKt, based on
+This is a Mini Twitter Clone application developed using Hexagon, based on
 [this](http://sparkjava.com/tutorials/twitter-clone) Spark tutorial. It makes use of Pebble to
 render pages, and MongoDB for database functions.
 

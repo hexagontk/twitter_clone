@@ -18,7 +18,6 @@ import loggedInUser
 import models.Message
 import models.User
 import showError
-import java.net.URI
 import java.net.URL
 
 val router: HttpHandler by lazy {
@@ -32,7 +31,7 @@ val router: HttpHandler by lazy {
 
         get("/") {
             if (!isLoggedIn())
-                return@get redirect(FOUND_302, URI("/public"))
+                return@get redirect(FOUND_302, "/public")
 
             val messageFeed = if (loggedInUser().following.isEmpty()) {
                 emptyList()
@@ -95,7 +94,7 @@ val router: HttpHandler by lazy {
                             password
                         )
                     )
-                    redirect(FOUND_302, URI("/login"))
+                    redirect(FOUND_302, "/login")
                 }
             }
         }
@@ -118,13 +117,13 @@ val router: HttpHandler by lazy {
                 if (user.password != password) {
                     showError("classpath:templates/login.html", "Incorrect credentials")
                 } else {
-                    logUserIn(user).redirect(FOUND_302, URI("/"))
+                    logUserIn(user).redirect(FOUND_302, "/")
                 }
             } ?: showError(resource = "classpath:templates/login.html", errorMessage = "User not found")
         }
 
         get("/logout") {
-            logUserOut().redirect(FOUND_302, URI("/"))
+            logUserOut().redirect(FOUND_302, "/")
         }
 
         path("/user", userRouter)
@@ -132,7 +131,7 @@ val router: HttpHandler by lazy {
         post("/message") {
             val messageContent = formParameters["message"]?.string() ?: return@post badRequest("Message is required")
             messages.insertOne(Message(userId = loggedInUser().username, text = messageContent))
-            redirect(FOUND_302, URI("/public"))
+            redirect(FOUND_302, "/public")
         }
 
         after(pattern = "/*", status = NOT_FOUND_404, callback = UrlCallback(URL("classpath:public")))

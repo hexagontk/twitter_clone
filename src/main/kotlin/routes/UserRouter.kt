@@ -12,7 +12,6 @@ import loggedInUser
 import models.Message
 import models.User
 import sessions
-import java.net.URI
 import java.net.URL
 
 val userRouter = path {
@@ -31,7 +30,7 @@ val userRouter = path {
             loggedInUser.username,
             mapOf("following" to loggedInUser.following)
         )
-        redirect(FOUND_302, URI("/user/$username"))
+        redirect(FOUND_302, "/user/$username")
     }
 
     get("/unfollow/{username}") {
@@ -45,7 +44,7 @@ val userRouter = path {
             loggedInUser.username,
             mapOf("following" to loggedInUser.following)
         )
-        redirect(FOUND_302, URI("/user/$username"))
+        redirect(FOUND_302, "/user/$username")
     }
 
     get("/{username}") {

@@ -1,4 +1,4 @@
-import com.hexagonkt.helpers.toBase64
+import com.hexagonkt.core.toBase64
 import com.hexagonkt.http.handlers.HttpContext
 import com.hexagonkt.http.model.Cookie
 import com.hexagonkt.templates.pebble.PebbleAdapter

@@ -2,7 +2,7 @@
 #
 # RUNTIME
 #
-FROM docker.io/eclipse-temurin:17-jre-alpine
+FROM docker.io/eclipse-temurin:21-jre-alpine
 
 USER root
 
